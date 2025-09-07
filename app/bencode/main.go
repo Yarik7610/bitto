@@ -6,13 +6,25 @@ import (
 )
 
 func Decode(s string) (any, error) {
-	l := len(s)
+	val, _, err := decode(s, 0)
+	if err != nil {
+		return nil, err
+	}
+	return val, nil
+}
 
-	if ok := unicode.IsDigit(rune(s[0])); ok {
-		return DecodeString(s)
-	} else if s[0] == 'i' && s[l-1] == 'e' {
-		return DecodeInt(s)
+func decode(s string, idx int) (any, int, error) {
+	if idx >= len(s) {
+		return nil, 0, fmt.Errorf("decode error: index %d out of range", idx)
+	}
+
+	if ok := unicode.IsDigit(rune(s[idx])); ok {
+		return DecodeString(s, idx)
+	} else if s[idx] == 'i' {
+		return DecodeInt(s, idx)
+	} else if s[idx] == 'l' {
+		return DecodeList(s, idx)
 	} else {
-		return nil, fmt.Errorf("Decode error: unsupported bencoded type detected")
+		return nil, 0, fmt.Errorf("Decode error: unsupported bencoded type detected")
 	}
 }

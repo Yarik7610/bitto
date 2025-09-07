@@ -6,33 +6,34 @@ import (
 	"unicode"
 )
 
-func DecodeString(s string) (string, error) {
-	if ok := unicode.IsDigit(rune(s[0])); !ok {
-		return "", fmt.Errorf("method DecodeString error: no bencoded string len detected")
+func DecodeString(s string, idx int) (string, int, error) {
+	l := len(s)
+
+	if ok := unicode.IsDigit(rune(s[idx])); !ok {
+		return "", 0, fmt.Errorf("method DecodeString error: no bencoded string len detected")
 	}
 
 	colonIdx := -1
-	for i := 1; i < len(s); i++ {
+	for i := idx + 1; i < l; i++ {
 		if s[i] == ':' {
 			colonIdx = i
 			break
 		}
 	}
 	if colonIdx == -1 {
-		return "", fmt.Errorf("DecodeString error: missing ':' delimiter")
+		return "", 0, fmt.Errorf("DecodeString error: missing ':' delimiter")
 	}
 
-	requestedLen, err := strconv.Atoi(s[:colonIdx])
+	requestedLen, err := strconv.Atoi(s[idx:colonIdx])
 	if err != nil {
-		return "", fmt.Errorf("DecodeString error: %v", err)
+		return "", 0, fmt.Errorf("DecodeString error: %v", err)
 	}
 
-	realLen := len(s) - colonIdx - 1
-	if requestedLen != realLen {
-		return "", fmt.Errorf("DecodeString error: wrong requested length of string, requsted: %d, got %d", requestedLen, realLen)
+	if colonIdx+1+requestedLen > l {
+		return "", idx, fmt.Errorf("DecodeString error: insufficient length, requested %d, got %d", requestedLen, l-(colonIdx+1))
 	}
 
-	return s[colonIdx+1 : colonIdx+1+requestedLen], nil
+	return s[colonIdx+1 : colonIdx+1+requestedLen], colonIdx + 1 + requestedLen, nil
 }
 
 func EncodeString(s string) string {
