@@ -35,7 +35,3 @@ func DecodeString(s string, idx int) (string, int, error) {
 
 	return s[colonIdx+1 : colonIdx+1+requestedLen], colonIdx + 1 + requestedLen, nil
 }
-
-func EncodeString(s string) string {
-	return fmt.Sprintf("%d:%s", len(s), s)
-}

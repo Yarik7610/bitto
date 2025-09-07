@@ -32,7 +32,3 @@ func DecodeInt(s string, idx int) (int64, int, error) {
 	}
 	return val, numEndIdx + 1, nil
 }
-
-func EncodeInt(val int64) string {
-	return fmt.Sprintf("i%de", val)
-}
