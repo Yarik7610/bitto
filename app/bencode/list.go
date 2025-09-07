@@ -19,11 +19,11 @@ func DecodeList(s string, idx int) ([]any, int, error) {
 			return res, i + 1, nil
 		}
 
-		val, idx, err := decode(s, i)
+		val, newIdx, err := decode(s, i)
 		if err != nil {
 			return nil, 0, err
 		}
 		res = append(res, val)
-		i = idx
+		i = newIdx
 	}
 }

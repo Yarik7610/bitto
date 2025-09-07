@@ -24,7 +24,9 @@ func decode(s string, idx int) (any, int, error) {
 		return DecodeInt(s, idx)
 	} else if s[idx] == 'l' {
 		return DecodeList(s, idx)
+	} else if s[idx] == 'd' {
+		return DecodeDict(s, idx)
 	} else {
-		return nil, 0, fmt.Errorf("Decode error: unsupported bencoded type detected")
+		return nil, 0, fmt.Errorf("decode error: unsupported bencoded type detected")
 	}
 }
