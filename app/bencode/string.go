@@ -11,22 +11,25 @@ func DecodeString(s string) (string, error) {
 		return "", fmt.Errorf("method DecodeString error: no bencoded string len detected")
 	}
 
-	var colonIdx int
+	colonIdx := -1
 	for i := 1; i < len(s); i++ {
 		if s[i] == ':' {
 			colonIdx = i
 			break
 		}
 	}
+	if colonIdx == -1 {
+		return "", fmt.Errorf("DecodeString error: missing ':' delimiter")
+	}
 
 	requestedLen, err := strconv.Atoi(s[:colonIdx])
 	if err != nil {
-		return "", fmt.Errorf("method DecodeString error: %v", err)
+		return "", fmt.Errorf("DecodeString error: %v", err)
 	}
 
 	realLen := len(s) - colonIdx - 1
-	if requestedLen > realLen {
-		return "", fmt.Errorf("method DecodeString error: wrong requested length of string, requsted: %d, got %d", requestedLen, realLen)
+	if requestedLen != realLen {
+		return "", fmt.Errorf("DecodeString error: wrong requested length of string, requsted: %d, got %d", requestedLen, realLen)
 	}
 
 	return s[colonIdx+1 : colonIdx+1+requestedLen], nil
