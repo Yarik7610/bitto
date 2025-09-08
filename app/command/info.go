@@ -9,6 +9,8 @@ import (
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
 
+const PIECE_HASH_LENGTH = 20
+
 type InfoResponse struct {
 	TrackerURL  string
 	Length      int64
@@ -77,7 +79,7 @@ func (c controller) Info(fileName string) (*InfoResponse, error) {
 	if !ok {
 		return nil, fmt.Errorf("no pieces field detected")
 	}
-	pieceHashes, err := utils.SplitEachNBytes([]byte(pieces), 20)
+	pieceHashes, err := splitEachNBytes([]byte(pieces), PIECE_HASH_LENGTH)
 	if err != nil {
 		return nil, err
 	}
@@ -90,4 +92,17 @@ func (c controller) Info(fileName string) (*InfoResponse, error) {
 		Pieces:      pieceHashes,
 	}
 	return response, nil
+}
+
+func splitEachNBytes(b []byte, n int) ([][]byte, error) {
+	l := len(b)
+	if l%n != 0 {
+		return nil, fmt.Errorf("SplitEachNBytes: slice length %d isn't a multiple of %d", l, n)
+	}
+
+	res := make([][]byte, 0)
+	for i := 0; i < l; i += n {
+		res = append(res, b[i:i+n])
+	}
+	return res, nil
 }

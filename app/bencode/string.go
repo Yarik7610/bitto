@@ -11,7 +11,7 @@ func DecodeString(s string, idx int) (string, int, error) {
 
 	if ok := unicode.IsDigit(rune(s[idx])); !ok {
 		fmt.Println(s, idx)
-		return "", 0, fmt.Errorf("method DecodeString error: no bencoded string len detected")
+		return "", 0, fmt.Errorf("DecodeString error: no bencoded string len detected")
 	}
 
 	colonIdx := -1
