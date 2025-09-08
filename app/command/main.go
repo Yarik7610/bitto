@@ -7,8 +7,8 @@ import (
 
 type Controller interface {
 	HandleCommand(cmd string, args []string)
-	Decode(encoded string) ([]byte, error)
-	Info(fileName string) (map[string]any, error)
+	Decode(encoded string) (string, error)
+	Info(fileName string) (*InfoResponse, error)
 }
 
 type controller struct{}
@@ -21,33 +21,24 @@ func (c controller) HandleCommand(cmd string, args []string) {
 	switch cmd {
 	case "decode":
 		if len(args) < 1 {
-			log.Fatalf("decode command error: no args detected")
+			log.Fatal("decode command error: no args detected")
 		}
 
-		b, err := c.Decode(args[0])
+		decoded, err := c.Decode(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println(string(b))
+		fmt.Println(decoded)
 	case "info":
 		if len(args) < 1 {
 			log.Fatalf("info command error: no args detected")
 		}
 
-		dict, err := c.Info(args[0])
+		response, err := c.Info(args[0])
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("info command error: %v", err)
 		}
-
-		fmt.Printf("Tracker URL: %s\n", dict["announce"])
-
-		infoSection, ok := dict["info"].(map[string]any)
-		if !ok {
-			log.Fatalf("info command error: no info section detected")
-		}
-		fmt.Printf("Length: %d\n", infoSection["length"])
-
+		fmt.Printf("Tracker URL: %s\nLength: %d\nInfo Hash: %x\n", response.Tracker, response.Length, response.Hash)
 	default:
 		log.Fatalf("Unknown command: %s", cmd)
 	}

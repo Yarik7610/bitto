@@ -1,6 +1,11 @@
 package bencode
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
+)
 
 func DecodeDict(s string, idx int) (map[string]any, int, error) {
 	l := len(s)
@@ -30,4 +35,29 @@ func DecodeDict(s string, idx int) (map[string]any, int, error) {
 		dict[key] = val
 		i = newIdx
 	}
+}
+
+func EncodeDict(dict map[string]any) (string, error) {
+	var res strings.Builder
+	res.WriteRune('d')
+
+	sortedKeys := make([]string, len(dict))
+	utils.SortMapKeys(dict, sortedKeys)
+
+	for _, key := range sortedKeys {
+		encodedKey, err := EncodeString(key)
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(encodedKey)
+
+		encodedVal, err := encode(dict[key])
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(encodedVal)
+	}
+
+	res.WriteRune('e')
+	return res.String(), nil
 }

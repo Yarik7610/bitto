@@ -6,15 +6,15 @@ import (
 	"github.com/codecrafters-io/bittorrent-starter-go/app/bencode"
 )
 
-func (c controller) Decode(encoded string) ([]byte, error) {
+func (c controller) Decode(encoded string) (string, error) {
 	decoded, err := bencode.Decode(encoded)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	jsonOutput, err := json.Marshal(decoded)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return jsonOutput, nil
+	return string(jsonOutput), nil
 }

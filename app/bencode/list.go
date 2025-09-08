@@ -1,6 +1,9 @@
 package bencode
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func DecodeList(s string, idx int) ([]any, int, error) {
 	l := len(s)
@@ -26,4 +29,20 @@ func DecodeList(s string, idx int) ([]any, int, error) {
 		res = append(res, val)
 		i = newIdx
 	}
+}
+
+func EncodeList(list []any) (string, error) {
+	var res strings.Builder
+	res.WriteRune('l')
+
+	for _, val := range list {
+		encodedVal, err := encode(val)
+		if err != nil {
+			return "", err
+		}
+		res.WriteString(encodedVal)
+	}
+
+	res.WriteRune('e')
+	return res.String(), nil
 }
