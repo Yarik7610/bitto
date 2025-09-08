@@ -28,6 +28,7 @@ func (c controller) HandleCommand(cmd string, args []string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+
 		fmt.Println(decoded)
 	case "info":
 		if len(args) < 1 {
@@ -38,7 +39,7 @@ func (c controller) HandleCommand(cmd string, args []string) {
 		if err != nil {
 			log.Fatalf("info command error: %v", err)
 		}
-		fmt.Printf("Tracker URL: %s\nLength: %d\nInfo Hash: %x\n", response.Tracker, response.Length, response.Hash)
+		fmt.Print(response)
 	default:
 		log.Fatalf("Unknown command: %s", cmd)
 	}

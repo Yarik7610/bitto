@@ -3,15 +3,33 @@ package command
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/bencode"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
 
 type InfoResponse struct {
-	Tracker string
-	Length  int64
-	Hash    []byte
+	TrackerURL  string
+	Length      int64
+	InfoHash    []byte
+	PieceLength int64
+	Pieces      [][]byte
+}
+
+func (r *InfoResponse) String() string {
+	var res strings.Builder
+
+	res.WriteString(fmt.Sprintf("Tracker URL: %s\n", r.TrackerURL))
+	res.WriteString(fmt.Sprintf("Length: %d", r.Length))
+	res.WriteString(fmt.Sprintf("Info Hash: %x", r.InfoHash))
+	res.WriteString(fmt.Sprintf("Piece Length: %d", r.PieceLength))
+	fmt.Println("Piece Hashes:")
+	for _, pieceHash := range r.Pieces {
+		fmt.Printf("%x\n", pieceHash)
+	}
+
+	return res.String()
 }
 
 func (c controller) Info(fileName string) (*InfoResponse, error) {
@@ -50,10 +68,26 @@ func (c controller) Info(fileName string) (*InfoResponse, error) {
 		return nil, err
 	}
 
+	pieceLength, ok := info["piece length"].(int64)
+	if !ok {
+		return nil, fmt.Errorf("no piece length field detected")
+	}
+
+	pieces, ok := info["pieces"].(string)
+	if !ok {
+		return nil, fmt.Errorf("no pieces field detected")
+	}
+	pieceHashes, err := utils.SplitEachNBytes([]byte(pieces), 20)
+	if err != nil {
+		return nil, err
+	}
+
 	response := &InfoResponse{
-		Tracker: tracker,
-		Length:  length,
-		Hash:    hash,
+		TrackerURL:  tracker,
+		Length:      length,
+		InfoHash:    hash,
+		PieceLength: pieceLength,
+		Pieces:      pieceHashes,
 	}
 	return response, nil
 }
