@@ -21,12 +21,12 @@ func (r *InfoResponse) String() string {
 	var res strings.Builder
 
 	res.WriteString(fmt.Sprintf("Tracker URL: %s\n", r.TrackerURL))
-	res.WriteString(fmt.Sprintf("Length: %d", r.Length))
-	res.WriteString(fmt.Sprintf("Info Hash: %x", r.InfoHash))
-	res.WriteString(fmt.Sprintf("Piece Length: %d", r.PieceLength))
-	fmt.Println("Piece Hashes:")
+	res.WriteString(fmt.Sprintf("Length: %d\n", r.Length))
+	res.WriteString(fmt.Sprintf("Info Hash: %x\n", r.InfoHash))
+	res.WriteString(fmt.Sprintf("Piece Length: %d\n", r.PieceLength))
+	res.WriteString("Piece Hashes:\n")
 	for _, pieceHash := range r.Pieces {
-		fmt.Printf("%x\n", pieceHash)
+		res.WriteString(fmt.Sprintf("%x\n", pieceHash))
 	}
 
 	return res.String()
