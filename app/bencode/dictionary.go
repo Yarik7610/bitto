@@ -41,8 +41,7 @@ func EncodeDict(dict map[string]any) (string, error) {
 	var res strings.Builder
 	res.WriteRune('d')
 
-	sortedKeys := make([]string, len(dict))
-	utils.SortMapKeys(dict, sortedKeys)
+	sortedKeys := utils.SortMapKeys(dict)
 
 	for _, key := range sortedKeys {
 		encodedKey, err := EncodeString(key)
