@@ -2,10 +2,13 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
@@ -21,16 +24,16 @@ type HandshakeMessage struct {
 func (m *HandshakeMessage) Bytes() []byte {
 	var res bytes.Buffer
 
-	res.WriteString(fmt.Sprintf("%d", len(m.ProtocolString)))
+	res.WriteByte(byte(len(m.ProtocolString)))
 	res.WriteString(m.ProtocolString)
-	res.WriteString(strings.Repeat("0", 8))
-	res.WriteString(string(m.InfoHash))
+	res.Write(make([]byte, 8))
+	res.Write(m.InfoHash)
 	res.WriteString(m.PeerID)
 
 	return res.Bytes()
 }
 
-func (c controller) Handshake(fileName string, peerSocketString string) (net.Conn, error) {
+func (c controller) Handshake(fileName string, peerSocketString string) (*HandshakeMessage, error) {
 	torrent, err := c.Info(fileName)
 	if err != nil {
 		return nil, fmt.Errorf("info command error: %v", err)
@@ -58,18 +61,22 @@ func (c controller) Handshake(fileName string, peerSocketString string) (net.Con
 		Torrent:        torrent,
 	}
 
-	fmt.Println(string(message.Bytes()))
 	_, err = conn.Write(message.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("write to peer error: %v", err)
 	}
 
-	response := make([]byte, 0)
-	_, err = conn.Read(response)
-	if err != nil {
+	b := make([]byte, 1024)
+	n, err := conn.Read(b)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("read from peer error: %v", err)
 	}
-	return conn, err
+
+	response, err := parsePeerHandhakeResponse(torrent, b[:n])
+	if err != nil {
+		return nil, err
+	}
+	return response, err
 }
 
 func checkPeerSocketValid(torrentPeers []PeerSocket, peerSocketString string) error {
@@ -97,13 +104,38 @@ func checkPeerSocketValid(torrentPeers []PeerSocket, peerSocketString string) er
 }
 
 func dialPeer(peerSocketString string) (net.Conn, error) {
-	conn, err := net.Dial("tcp", peerSocketString)
+	const CONN_OPERATIONS_TIME_SECONDS = 3
+
+	conn, err := net.DialTimeout("tcp", peerSocketString, time.Second*CONN_OPERATIONS_TIME_SECONDS)
 	if err != nil {
 		return nil, fmt.Errorf("dialPeer error: %v", err)
 	}
+	conn.SetDeadline(time.Now().Add(time.Second * CONN_OPERATIONS_TIME_SECONDS))
+
 	return conn, nil
 }
 
-func parsePeerHandhakeResponse(b []byte) (*HandshakeMessage, error) {
-	return nil, nil
+func parsePeerHandhakeResponse(torrent *Torrent, b []byte) (*HandshakeMessage, error) {
+	protocolLen := b[0]
+	protocol := (b[1:protocolLen])
+	b = b[1+protocolLen:]
+
+	b = b[8:]
+
+	infoHash := b[:20]
+	if !bytes.Equal(infoHash, torrent.InfoHash) {
+		return nil, fmt.Errorf("wrong info hashes detected while parsing another peer handshake response")
+	}
+	b = b[20:]
+
+	peerID := b[:20]
+
+	response := &HandshakeMessage{
+		ProtocolString: string(protocol),
+		PeerID:         string(peerID),
+		Torrent: &Torrent{
+			InfoHash: infoHash,
+		},
+	}
+	return response, nil
 }

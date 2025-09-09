@@ -12,6 +12,7 @@ type Controller interface {
 	Decode(encoded string) (string, error)
 	Info(fileName string) (*Torrent, error)
 	Peers(fileName string) ([]PeerSocket, error)
+	Handshake(fileName string, peerSocketString string) (*HandshakeMessage, error)
 }
 
 type controller struct {
@@ -65,13 +66,12 @@ func (c controller) HandleCommand(cmd string, args []string) {
 			log.Fatalf("handshake command error: wrong args count detected")
 		}
 
-		_, err := c.Handshake(args[0], args[1])
+		peerResponse, err := c.Handshake(args[0], args[1])
 		if err != nil {
 			log.Fatalf("hahdshake command error: %v", err)
 		}
 
-		log.Println("Succesfully send data")
-
+		fmt.Printf("Peer ID: %x\n", peerResponse.PeerID)
 	default:
 		log.Fatalf("Unknown command: %s", cmd)
 	}
