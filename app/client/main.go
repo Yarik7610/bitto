@@ -1,10 +1,9 @@
 package client
 
-import "net"
+import (
+	"net"
 
-const (
-	PEER_ID   = "lHavHuZBkaYWXsuvjGJh"
-	PEER_PORT = 6881
+	"github.com/codecrafters-io/bittorrent-starter-go/app/constants"
 )
 
 type Client struct {
@@ -15,8 +14,8 @@ type Client struct {
 
 func New() *Client {
 	return &Client{
-		PeerID:   PEER_ID,
-		PeerPort: PEER_PORT,
+		PeerID:   constants.PEER_ID,
+		PeerPort: constants.PEER_PORT,
 		Peers:    make(map[string]net.Conn),
 	}
 }

@@ -9,11 +9,8 @@ import (
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/bencode"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/client"
+	"github.com/codecrafters-io/bittorrent-starter-go/app/constants"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
-)
-
-const (
-	COMPACT_MODE = 1
 )
 
 type PeerSocket struct {
@@ -73,7 +70,7 @@ func (c controller) Peers(fileName string) ([]PeerSocket, error) {
 func createPeersQueryParams(client *client.Client, info *Torrent) *url.Values {
 	params := url.Values{}
 
-	params.Add("info_hash", string(info.InfoHash))
+	params.Add("info_hash", string(info.InfoHash[:]))
 	params.Add("peer_id", client.PeerID)
 	params.Add("port", strconv.Itoa(client.PeerPort))
 
@@ -81,7 +78,7 @@ func createPeersQueryParams(client *client.Client, info *Torrent) *url.Values {
 	params.Add("downloaded", strconv.Itoa(0))
 	params.Add("left", strconv.FormatInt(info.Length, 10))
 
-	params.Add("compact", strconv.Itoa(COMPACT_MODE))
+	params.Add("compact", strconv.Itoa(constants.COMPACT_MODE))
 
 	return &params
 }
@@ -89,18 +86,14 @@ func createPeersQueryParams(client *client.Client, info *Torrent) *url.Values {
 func readPeers(b []byte) ([]PeerSocket, error) {
 	l := len(b)
 
-	const IP_ADDRESS_BYTES_COUNT = 4
-	const PORT_BYTES_COUNT = 2
-	const SOCKET_BYTES_COUNT = IP_ADDRESS_BYTES_COUNT + PORT_BYTES_COUNT
-
-	if l%(SOCKET_BYTES_COUNT) != 0 {
-		return nil, fmt.Errorf("readPeers: slice length %d isn't a multiple of %d", l, SOCKET_BYTES_COUNT)
+	if l%(constants.SOCKET_BYTES_COUNT) != 0 {
+		return nil, fmt.Errorf("readPeers: slice length %d isn't a multiple of %d", l, constants.SOCKET_BYTES_COUNT)
 	}
 
 	peers := make([]PeerSocket, 0)
-	for i := 0; i < len(b); i += SOCKET_BYTES_COUNT {
-		IP := b[i : i+IP_ADDRESS_BYTES_COUNT]
-		port := binary.BigEndian.Uint16(b[i+IP_ADDRESS_BYTES_COUNT : i+SOCKET_BYTES_COUNT])
+	for i := 0; i < len(b); i += constants.SOCKET_BYTES_COUNT {
+		IP := b[i : i+constants.IP_ADDRESS_BYTES_COUNT]
+		port := binary.BigEndian.Uint16(b[i+constants.IP_ADDRESS_BYTES_COUNT : i+constants.SOCKET_BYTES_COUNT])
 		peers = append(peers, PeerSocket{IP: IP, Port: port})
 	}
 	return peers, nil

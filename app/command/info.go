@@ -6,17 +6,16 @@ import (
 	"strings"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/bencode"
+	"github.com/codecrafters-io/bittorrent-starter-go/app/constants"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
-
-const PIECE_HASH_LENGTH = 20
 
 type Torrent struct {
 	TrackerURL  string
 	Length      int64
-	InfoHash    []byte
+	InfoHash    [constants.HASH_LENGTH]byte
 	PieceLength int64
-	Pieces      [][]byte
+	Pieces      [][constants.HASH_LENGTH]byte
 }
 
 func (r *Torrent) String() string {
@@ -79,7 +78,7 @@ func (c controller) Info(fileName string) (*Torrent, error) {
 	if !ok {
 		return nil, fmt.Errorf("no pieces field detected")
 	}
-	pieceHashes, err := splitEachNBytes([]byte(pieces), PIECE_HASH_LENGTH)
+	pieceHashes, err := splitPieceHashes([]byte(pieces))
 	if err != nil {
 		return nil, err
 	}
@@ -94,15 +93,18 @@ func (c controller) Info(fileName string) (*Torrent, error) {
 	return response, nil
 }
 
-func splitEachNBytes(b []byte, n int) ([][]byte, error) {
+func splitPieceHashes(b []byte) ([][constants.HASH_LENGTH]byte, error) {
 	l := len(b)
-	if l%n != 0 {
-		return nil, fmt.Errorf("SplitEachNBytes: slice length %d isn't a multiple of %d", l, n)
+	if l%constants.HASH_LENGTH != 0 {
+		return nil, fmt.Errorf("splitPieceHashes: slice length %d isn't a multiple of %d", l, constants.HASH_LENGTH)
 	}
 
-	res := make([][]byte, 0)
-	for i := 0; i < l; i += n {
-		res = append(res, b[i:i+n])
+	piecesCount := l / constants.HASH_LENGTH
+	res := make([][constants.HASH_LENGTH]byte, 0, piecesCount)
+	for i := 0; i < l; i += constants.HASH_LENGTH {
+		var hash [constants.HASH_LENGTH]byte
+		copy(hash[:], b[i:i+constants.HASH_LENGTH])
+		res = append(res, hash)
 	}
 	return res, nil
 }

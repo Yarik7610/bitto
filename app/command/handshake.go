@@ -10,10 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/codecrafters-io/bittorrent-starter-go/app/constants"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
-
-const PROTOCOL_STRING = "BitTorrent protocol"
 
 type HandshakeMessage struct {
 	ProtocolString string
@@ -27,7 +26,7 @@ func (m *HandshakeMessage) Bytes() []byte {
 	res.WriteByte(byte(len(m.ProtocolString)))
 	res.WriteString(m.ProtocolString)
 	res.Write(make([]byte, 8))
-	res.Write(m.InfoHash)
+	res.Write(m.InfoHash[:])
 	res.WriteString(m.PeerID)
 
 	return res.Bytes()
@@ -56,7 +55,7 @@ func (c controller) Handshake(fileName string, peerSocketString string) (*Handsh
 	c.client.Peers[utils.GetRemoteAddrString(conn)] = conn
 
 	message := &HandshakeMessage{
-		ProtocolString: PROTOCOL_STRING,
+		ProtocolString: constants.PROTOCOL_STRING,
 		PeerID:         c.client.PeerID,
 		Torrent:        torrent,
 	}
@@ -104,13 +103,12 @@ func checkPeerSocketValid(torrentPeers []PeerSocket, peerSocketString string) er
 }
 
 func dialPeer(peerSocketString string) (net.Conn, error) {
-	const CONN_OPERATIONS_TIME_SECONDS = 3
 
-	conn, err := net.DialTimeout("tcp", peerSocketString, time.Second*CONN_OPERATIONS_TIME_SECONDS)
+	conn, err := net.DialTimeout("tcp", peerSocketString, time.Second*constants.CONN_OPERATIONS_TIME_SECONDS)
 	if err != nil {
 		return nil, fmt.Errorf("dialPeer error: %v", err)
 	}
-	conn.SetDeadline(time.Now().Add(time.Second * CONN_OPERATIONS_TIME_SECONDS))
+	conn.SetDeadline(time.Now().Add(time.Second * constants.CONN_OPERATIONS_TIME_SECONDS))
 
 	return conn, nil
 }
@@ -122,8 +120,9 @@ func parsePeerHandhakeResponse(torrent *Torrent, b []byte) (*HandshakeMessage, e
 
 	b = b[8:]
 
-	infoHash := b[:20]
-	if !bytes.Equal(infoHash, torrent.InfoHash) {
+	var infoHash [constants.HASH_LENGTH]byte
+	copy(infoHash[:], b[:20])
+	if !bytes.Equal(infoHash[:], torrent.InfoHash[:]) {
 		return nil, fmt.Errorf("wrong info hashes detected while parsing another peer handshake response")
 	}
 	b = b[20:]
