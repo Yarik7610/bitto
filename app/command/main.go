@@ -3,19 +3,25 @@ package command
 import (
 	"fmt"
 	"log"
+
+	"github.com/codecrafters-io/bittorrent-starter-go/app/client"
 )
 
 type Controller interface {
 	HandleCommand(cmd string, args []string)
 	Decode(encoded string) (string, error)
-	Info(fileName string) (*InfoResponse, error)
+	Info(fileName string) (*Torrent, error)
 	Peers(fileName string) ([]PeerSocket, error)
 }
 
-type controller struct{}
+type controller struct {
+	client *client.Client
+}
 
-func NewController() Controller {
-	return controller{}
+func NewController(client *client.Client) Controller {
+	return controller{
+		client: client,
+	}
 }
 
 func (c controller) HandleCommand(cmd string, args []string) {
@@ -54,6 +60,18 @@ func (c controller) HandleCommand(cmd string, args []string) {
 		for _, peer := range peers {
 			fmt.Println(peer)
 		}
+	case "handshake":
+		if len(args) != 2 {
+			log.Fatalf("handshake command error: wrong args count detected")
+		}
+
+		_, err := c.Handshake(args[0], args[1])
+		if err != nil {
+			log.Fatalf("hahdshake command error: %v", err)
+		}
+
+		log.Println("Succesfully send data")
+
 	default:
 		log.Fatalf("Unknown command: %s", cmd)
 	}

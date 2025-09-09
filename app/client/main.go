@@ -1,19 +1,22 @@
 package client
 
-import "github.com/codecrafters-io/bittorrent-starter-go/app/command"
+import "net"
 
-type Client interface {
-	HandleCommand(cmd string, args []string)
+const (
+	PEER_ID   = "lHavHuZBkaYWXsuvjGJh"
+	PEER_PORT = 6881
+)
+
+type Client struct {
+	PeerID   string
+	PeerPort int
+	Peers    map[string]net.Conn
 }
 
-type client struct {
-	commandController command.Controller
-}
-
-func New() Client {
-	return &client{commandController: command.NewController()}
-}
-
-func (c *client) HandleCommand(cmd string, args []string) {
-	c.commandController.HandleCommand(cmd, args)
+func New() *Client {
+	return &Client{
+		PeerID:   PEER_ID,
+		PeerPort: PEER_PORT,
+		Peers:    make(map[string]net.Conn),
+	}
 }

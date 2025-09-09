@@ -8,18 +8,21 @@ import (
 	"strconv"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/bencode"
+	"github.com/codecrafters-io/bittorrent-starter-go/app/client"
 	"github.com/codecrafters-io/bittorrent-starter-go/app/utils"
 )
 
 const (
-	PEER_ID      = "lHavHuZBkaYWXsuvjGJh"
-	PEER_PORT    = 6881
 	COMPACT_MODE = 1
 )
 
 type PeerSocket struct {
 	IP   net.IP
 	Port uint16
+}
+
+func (s *PeerSocket) Equal(other *PeerSocket) bool {
+	return s.IP.Equal(other.IP) && s.Port == other.Port
 }
 
 func (s PeerSocket) String() string {
@@ -36,7 +39,7 @@ func (c controller) Peers(fileName string) ([]PeerSocket, error) {
 	if err != nil {
 		return nil, err
 	}
-	queryParams := createPeersQueryParams(info)
+	queryParams := createPeersQueryParams(c.client, info)
 	baseURL.RawQuery = queryParams.Encode()
 
 	b, err := utils.Get(baseURL.String())
@@ -67,12 +70,12 @@ func (c controller) Peers(fileName string) ([]PeerSocket, error) {
 	return peers, nil
 }
 
-func createPeersQueryParams(info *InfoResponse) *url.Values {
+func createPeersQueryParams(client *client.Client, info *Torrent) *url.Values {
 	params := url.Values{}
 
 	params.Add("info_hash", string(info.InfoHash))
-	params.Add("peer_id", PEER_ID)
-	params.Add("port", strconv.Itoa(PEER_PORT))
+	params.Add("peer_id", client.PeerID)
+	params.Add("port", strconv.Itoa(client.PeerPort))
 
 	params.Add("uploaded", strconv.Itoa(0))
 	params.Add("downloaded", strconv.Itoa(0))

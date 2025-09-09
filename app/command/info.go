@@ -11,7 +11,7 @@ import (
 
 const PIECE_HASH_LENGTH = 20
 
-type InfoResponse struct {
+type Torrent struct {
 	TrackerURL  string
 	Length      int64
 	InfoHash    []byte
@@ -19,7 +19,7 @@ type InfoResponse struct {
 	Pieces      [][]byte
 }
 
-func (r *InfoResponse) String() string {
+func (r *Torrent) String() string {
 	var res strings.Builder
 
 	res.WriteString(fmt.Sprintf("Tracker URL: %s\n", r.TrackerURL))
@@ -34,7 +34,7 @@ func (r *InfoResponse) String() string {
 	return res.String()
 }
 
-func (c controller) Info(fileName string) (*InfoResponse, error) {
+func (c controller) Info(fileName string) (*Torrent, error) {
 	rawBytes, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (c controller) Info(fileName string) (*InfoResponse, error) {
 		return nil, err
 	}
 
-	response := &InfoResponse{
+	response := &Torrent{
 		TrackerURL:  tracker,
 		Length:      length,
 		InfoHash:    hash,

@@ -4,9 +4,10 @@ import (
 	"os"
 
 	"github.com/codecrafters-io/bittorrent-starter-go/app/client"
+	"github.com/codecrafters-io/bittorrent-starter-go/app/command"
 )
 
 func main() {
-	cl := client.New()
-	cl.HandleCommand(os.Args[1], os.Args[2:])
+	commandController := command.NewController(client.New())
+	commandController.HandleCommand(os.Args[1], os.Args[2:])
 }
